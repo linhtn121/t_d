@@ -1,0 +1,36 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:keepScreenOn="true"
+
+    android:background="#000"
+    tools:context="com.great.tudien.WelcomeActivity">
+
+    <LinearLayout
+        android:layout_centerInParent="true"
+        android:clipChildren="false"
+        android:layout_margin="2dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:gravity="center"
+            android:textColor="#fff"
+            android:ems="27"
+            android:textSize="30sp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Welcome!"
+            android:id="@+id/textView" />
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

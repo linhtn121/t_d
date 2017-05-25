@@ -28,7 +28,9 @@ import java.util.Map;
  * Created by Linhtn9 on 5/5/2017.
  */
 
-public class Data extends SQLiteOpenHelper {
+public class Data  {
+
+    public static Data data = null;
 
     private static String TAG = "DataBaseHelper"; // Tag just for the LogCat window
     //destination path (location) of our database on device
@@ -42,59 +44,17 @@ public class Data extends SQLiteOpenHelper {
 
     Context mContext;
     TextView mOutput;
-    public Data(final Context context,TextView output){
-        super(context,DB_NAME,null,1);
+    public Data( Context context){
         mContext = context;
-        mOutput = output;
-
-        if(android.os.Build.VERSION.SDK_INT >= 17){
-            DB_PATH = context.getApplicationInfo().dataDir + "/databases/";
-        }
-        else
-        {
-            DB_PATH = "/data/data/" + context.getPackageName() + "/databases/";
-        }
-
-
-       // DB_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator;
-        outFileName = DB_PATH + DB_NAME;
-        Log.i(TAG, "file out: " + outFileName);
-
-        this.getReadableDatabase();
-        this.close();
-
+        initDB2(null);
     }
-
-
-
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-
-
-        boolean mDataBaseExist = checkDataBase();
-        initDB2(db);
-        if(!mDataBaseExist)
-        {
-            //initDB();
-
-        }
-
-    }
-
-    private boolean checkDataBase()
-    {
-        File dbFile = new File(DB_PATH + DB_NAME);
-        Log.e(TAG, "File info: " +  Integer.parseInt(String.valueOf(dbFile.length()/1024)));
-        return dbFile.exists();
-    }
-
 
     String outFileName;
     static boolean isReady = false;
 
 
     static Map<String, String> mapDic = new HashMap<String, String>();
+    static Map<String, String> mapIndex = new HashMap<String, String>();
     public void initDB2(SQLiteDatabase db){
 
         String queries = "";
@@ -114,18 +74,16 @@ public class Data extends SQLiteOpenHelper {
 
             br = new BufferedReader(new InputStreamReader(inputStream));
             Long tsLong = System.currentTimeMillis();
+            int index = 0;
             while ((line = br.readLine()) != null) {
-               // sb.append(line);
-                  //  int index = line.indexOf('*');
-
-                    //String word = line.substring(0, index);
-                    //String mean = line.substring(index + 1, line.length());
-                    mapDic.put(line.substring(0, line.indexOf('*')), line);
-
+                String key = line.substring(0, line.indexOf('*'));
+                mapDic.put(key, index + "_" + line);
+                mapIndex.put(index + "", key);
+                index++;
             }
 
             Long tsLong2 = System.currentTimeMillis();
-            Log.i("Linh Linh", (tsLong2 - tsLong) + "") ;
+            Log.i("TIME", (tsLong2 - tsLong) + "") ;
 
 
         } catch (IOException e) {
@@ -150,74 +108,75 @@ public class Data extends SQLiteOpenHelper {
 
     }
 
-    public void initDB()
-    {
-        Log.e(TAG, "init db");
-
-        try
-        {
-            Toast.makeText(mContext,"Please wait!", Toast.LENGTH_LONG).show();
-            InputStream mInput = mContext.getAssets().open(DB_NAME);
 
 
-            OutputStream mOutput = new FileOutputStream(outFileName);
-            byte[] mBuffer = new byte[1024];
-            int mLength;
-            while ((mLength = mInput.read(mBuffer))>0)
-            {
-                mOutput.write(mBuffer, 0, mLength);
-            }
+    String findword = null;
 
 
-            mOutput.flush();
-            mOutput.close();
-            mInput.close();
+    private String getSubget(String key, String line){
 
-            Toast.makeText(mContext,"The app is ready!", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "createDatabase database created");
+        if(line.indexOf('_') < 0 )
+            return "";
 
+        String indexMap = line.substring(0, line.indexOf('_'));
+        int index = Integer.parseInt(indexMap);
 
-            SQLiteDatabase database = SQLiteDatabase.openDatabase(outFileName, null,SQLiteDatabase.OPEN_READWRITE);
-            database.close();
+        String key1 = mapIndex.get((index + 1)+"");
+        String key2 = mapIndex.get((index + 2)+"");
+        String key3 = mapIndex.get((index + 3)+"");
 
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-        Log.i(TAG, "******* File not found. Did you" +
-                " add a WRITE_EXTERNAL_STORAGE permission to the   manifest?");
-    }
-        catch (Exception e)
-        {
-            Toast.makeText(mContext,"Something went wrong, " + e.getMessage(), Toast.LENGTH_LONG).show();
+        String returnString = "";
+        if(key1.contains(key))
+            returnString= "-> " + returnString + key1;
+
+        if(key2.contains(key)){
+            if(returnString.length() > 0)
+                returnString = returnString + ", ";
+            returnString= returnString + key2;
         }
 
 
+        if(key3.contains(key)){
+            if(returnString.length() > 0)
+                returnString = returnString + ", ";
+            returnString= returnString + key3;
+        }
+
+        if(returnString.length() > 0)
+            returnString = returnString + "?";
+
+        return returnString;
     }
-
-    String findword = null;
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-    }
-
-    public String getMean(String word) {
+    public String[] getMean(String word) {
 
         if(!isReady) {
             findword = word;
-            return "Loading...";
+            return null;
         }
-        word = word.toLowerCase();
+        word = word.toLowerCase().trim();
+
 
         String line = mapDic.get(word);
 
         if(line ==null)
             line ="";
+
+        String subgetion = getSubget(word, line);
+        if( line.indexOf('_')> 0)
+            line = line.substring(line.indexOf('_') + 1, line.length());
+
         int index = line.indexOf('*');
         //String word = line.substring(0, index);
         String mean = "";
         if(index > 0)
             mean = line.substring(index + 1, line.length());
 
-        return mean;
+        String[] rt = {
+                subgetion,
+                mean
+        };
+
+        return rt;
 
        /* String local = mContext.getAssets().getLocales().toString();
 
